@@ -1,0 +1,29 @@
+version: "3.8"
+
+services:
+  backend:
+   build: ./backend
+   container_name: back_p6
+   environment:
+    - MONGODB_CONNSTRING=mongodb://database:27017
+   volumes:
+     - ./backend:/app
+     - /app/node_modules
+
+  frontend:
+   build: ./frontend
+   container_name: front_p6
+   volumes:
+     - ./frontend:/app
+   ports:
+     - 8080:8080
+
+  database:
+   image: mongo:5.0
+   container_name: db_p6
+   restart: always
+   ports:
+    - 27017:27017
+   environment:
+    - MONGO_INITDB_ROOT_USERNAME=admin
+    - MONGO_INITDB_ROOT_PASSWORD=admin
