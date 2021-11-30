@@ -9,6 +9,11 @@ services:
    volumes:
      - ./backend:/app
      - /app/node_modules
+   ports:
+    - 3000:3000
+   networks:
+     - front-network
+     - back-network
 
   frontend:
    build: ./frontend
@@ -17,6 +22,8 @@ services:
      - ./frontend:/app
    ports:
      - 8080:8080
+   networks:
+     - front-network
 
   database:
    image: mongo:5.0
@@ -24,6 +31,9 @@ services:
    restart: always
    ports:
     - 27017:27017
-   environment:
-    - MONGO_INITDB_ROOT_USERNAME=admin
-    - MONGO_INITDB_ROOT_PASSWORD=admin
+   networks:
+    - back-network
+
+networks:
+  back-network:
+  front-network:
