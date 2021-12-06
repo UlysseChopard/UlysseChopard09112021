@@ -14,12 +14,11 @@ services:
    networks:
      - front-network
      - back-network
+   restart: always
 
   frontend:
    build: ./frontend
    container_name: front_p6
-   volumes:
-     - ./frontend:/app
    ports:
      - 8080:8080
    networks:

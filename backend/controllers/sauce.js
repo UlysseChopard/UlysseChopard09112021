@@ -19,8 +19,7 @@ exports.create = (req, res, next) => {
 };
 
 exports.get = (req, res, next) => {
-    const query = Sauce.findById(req.params.id);
-    query
+  Sauce.findById(req.params.id)
       .exec()
       .then(sauce => res.status(200).json(sauce))
       .catch(e => res.satus(404).json({
@@ -29,8 +28,7 @@ exports.get = (req, res, next) => {
 };
 
 exports.getAll = (req, res, next) => {
-    const query = Sauce.find();
-    query
+    Sauce.find()
       .exec()
       .then(sauces => res.status(200).json(sauces))
       .catch(e => res.status(400).json({ error: e }));
@@ -61,37 +59,80 @@ exports.modify = (req, res, next) => {
 };
 
 exports.del = (req, res, next) => {
-    const query = Sauce.findById(req.params.id);
-    query
-      .exec()
-      .then(sauce => {
-          const filename = sauce.imageUrl.split("/images/")[1];
-          fs.unlink(`images/${filename}`, () => {
-              const deleteQuery = Sauce.findByIdAndDelete(req.params.id);
-              deleteQuery
-                .exec()
-                .then(() => res.status(200).json({ message: "Supprimé" }))
-                .catch(e => res.status(400).json({ error: e }))
-              });
-            })
-      .catch(e => res.status(500).json({ error: e }));
+    Sauce.findById(req.params.id)
+        .exec()
+        .then(sauce => {
+            const filename = sauce.imageUrl.split("/images/")[1];
+            fs.unlink(`images/${filename}`, () => {
+                const deleteQuery = Sauce.findByIdAndDelete(req.params.id);
+                deleteQuery
+                  .exec()
+                  .then(() => res.status(200).json({ message: "Supprimé" }))
+                  .catch(e => res.status(400).json({ error: e }))
+                });
+              })
+        .catch(e => res.status(500).json({ error: e }));
 };
 
-// TODO: améliorer
 exports.recordLikes = (req, res, next) => {
-  const update = {};
-  if (req.body.like > 0) {
-    update.likes++;
-    update.usersLiked.push(req.body.userId);
-  } else if (req.body.like < 0) {
-    update.dislikes++;
-    update.usersDisliked.push(req.body.userId);
-  } else {
+  const sauceId = req.params.id;
+  const { userId, like } = req.body;
 
+  const previousOpinion = (sauce, user) => {
+    if (sauce.usersLiked.includes(user)) return 1;
+    if (sauce.usersDisliked.includes(user)) return -1;
+    return 0;
+  };
+
+  const manageSauceLikesState = (sauce, user, liked, modify) => {
+    if (modify && liked === 1) {
+      sauce.dislikes--;
+      sauce.usersDisliked = sauce.usersDisliked.filter(id => id !== user);
+    } else if (modify && liked === -1) {
+      sauce.likes--;
+      sauce.usersLiked = sauce.usersLiked.filter(id => id !== user);
+    } else if (!liked && modify === 1) {
+      sauce.usersLiked = sauce.usersLiked.filter(id => id !== user);
+      sauce.likes--;
+      return sauce;
+    } else if (!liked && modify === -1) {
+      sauce.usersDisliked = sauce.usersDisliked.filter(id => id !== user);
+      sauce.dislikes--;
+      return sauce;
+    }
+
+    if (liked === 1) {
+      sauce.likes++;
+      sauce.usersLiked.push(user);
+      return sauce;
+    } else if (liked === -1) {
+      sauce.dislikes++;
+      sauce.usersDisliked.push(user);
+      return sauce;
+    } else {
+      return sauce;
+    }
   }
-  Sauce.findByIdAndUpdate(req.params.id, { }, { new: true })
-};
 
-exports.cancelLike = (req, res, next) => {
-  
+
+  const updateSauce = (sauce, user, likeVal) => {
+    const prevOpinion = previousOpinion(sauce, user);
+    
+    if (prevOpinion === likeVal) return sauce;
+
+    return manageSauceLikesState(sauce, user, likeVal, prevOpinion);
+  };
+
+  Sauce.findById(sauceId, (err, sauce) => {
+    if (err) return res.status(500).json({ error: err });
+
+    const updatedSauce = updateSauce(sauce, userId, like);
+
+    updatedSauce.save()
+      .then(newSauce => {
+        if (newSauce !== updatedSauce) throw new Error("Problème à la sauvegarde de la modification des likes");
+        res.status(200).json({ message: `${newSauce.name}: likes modifiés` });
+      })
+      .catch(e => res.status(400).json({ error: e }))
+  });
 };
