@@ -36,18 +36,28 @@ exports.getAll = (req, res, next) => {
       .catch(e => res.status(400).json({ error: e }));
 };
 
-// TODO: supprimer les images inutiles
 exports.modify = (req, res, next) => {
-    const sauceObj = req.file ?
-      {
-          ...JSON.parse(req.body.sauce),
-          imageUrl: `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
-      } : { ...req.body };
-      console.log(sauceObj);
-    const query = Sauce.findByIdAndUpdate(req.params.id, { ...sauceObj, _id: req.params.id }, { new: true, upsert: true });
-    query.exec()
-      .then(() => res.status(200).json({ message: `${sauceObj.name} modifié` }))
-      .catch(e => res.status(400).json({ error: e }));
+  const modifiedSauce = req.file ? {
+    ...JSON.parse(req.body.sauce),
+    imageUrl:`${req.protocol}://${req.get("host")}/images/${req.file.filename}`
+  } : { ...req.body };
+
+  console.log("modified:", modifiedSauce);
+
+  const deletePreviousImage = (sauce) => {
+    const filename = sauce.imageUrl.split("/images/")[1];
+    console.log("sauce", sauce);
+    console.log("filename", filename);
+    fs.unlink(`/app/images/${filename}`, err => {
+      if (err) throw err;
+    });
+  }
+ 
+  Sauce.findByIdAndUpdate(req.params.id, { ...modifiedSauce, _id: req.params.id }, (err, sauce) => {
+    if (err) return res.status(400).json({ error: err });
+    if (req.file) deletePreviousImage(sauce);
+    res.status(200).json({ message: `Sauce ${sauce.name} modifiée`});
+  })
 };
 
 exports.del = (req, res, next) => {
@@ -57,8 +67,8 @@ exports.del = (req, res, next) => {
       .then(sauce => {
           const filename = sauce.imageUrl.split("/images/")[1];
           fs.unlink(`images/${filename}`, () => {
-              const query = Sauce.findByIdAndDelete(req.params.id);
-              query
+              const deleteQuery = Sauce.findByIdAndDelete(req.params.id);
+              deleteQuery
                 .exec()
                 .then(() => res.status(200).json({ message: "Supprimé" }))
                 .catch(e => res.status(400).json({ error: e }))
