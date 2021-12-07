@@ -67,7 +67,7 @@ exports.del = (req, res, next) => {
                 const deleteQuery = Sauce.findByIdAndDelete(req.params.id);
                 deleteQuery
                   .exec()
-                  .then(() => res.status(200).json({ message: "Supprimé" }))
+                  .then(deletedSauce => res.status(200).json({ message: `Sauce ${deletedSauce.name} supprimée` }))
                   .catch(e => res.status(400).json({ error: e }))
                 });
               })
@@ -131,7 +131,7 @@ exports.recordLikes = (req, res, next) => {
     updatedSauce.save()
       .then(newSauce => {
         if (newSauce !== updatedSauce) throw new Error("Problème à la sauvegarde de la modification des likes");
-        res.status(200).json({ message: `${newSauce.name}: likes modifiés` });
+        res.status(200).json({ message: `Sauce ${newSauce.name} : likes modifiés` });
       })
       .catch(e => res.status(400).json({ error: e }))
   });
