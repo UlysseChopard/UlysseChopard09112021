@@ -8,6 +8,7 @@ services:
     - MONGODB_CONNSTRING=mongodb://database:27017
    volumes:
      - ./backend:/app
+    # Pour éviter un bug avec bcrypt
      - /app/node_modules
    ports:
     - 3000:3000
