@@ -15,7 +15,7 @@ services:
    networks:
      - front-network
      - back-network
-   restart: always
+   restart: unless-stopped
 
   frontend:
    build: ./frontend
@@ -28,7 +28,7 @@ services:
   database:
    image: mongo:5.0
    container_name: db_p6
-   restart: always
+   restart: unless-stopped
    ports:
     - 27017:27017
    networks:
