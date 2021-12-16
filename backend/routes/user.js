@@ -9,7 +9,7 @@ const userCtrl = require("../controllers/user");
 router.post(
   "/signup",
   createAccountLimiter,
-  validateInput(userPOST),
+  validateInput(userPOST, "body"),
   userCtrl.signup
 );
 router.post("/login", userCtrl.login);

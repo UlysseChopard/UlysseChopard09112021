@@ -20,7 +20,7 @@ exports.create = (req, res, next) => {
     .then(() =>
       res.status(201).json({ message: `Sauce ${sauce.name} enregistrée` })
     )
-    .catch((e) => res.status(400).json({ error: e }));
+    .catch((error) => res.status(400).json({ error: error}));
 };
 
 exports.get = (req, res, next) => {
