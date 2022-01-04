@@ -4,8 +4,8 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const multer = require("../middleware/multer-config");
 const validateInput = require("../middleware/input-validation");
-
 const { saucePOST } = require("../middleware/input-schemas");
+
 const sauceCtrl = require("../controllers/sauce");
 
 router.use(auth);
