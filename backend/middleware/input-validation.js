@@ -1,6 +1,4 @@
-const Joi = require("joi");
-
-const validateInput = (schema, property = "body", ...additionalProps) => {
+const validateInput = (schema, property = "body") => {
   property = property.split(".");
   return (req, res, next) => {
     const data = property.reduce((acc, val) => acc[val], req);
