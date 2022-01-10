@@ -5,7 +5,14 @@ services:
    build: ./backend
    container_name: back_p6
    environment:
-    - MONGODB_CONNSTRING=mongodb://database:27017
+    - DB_USER=/run/secrets/db_user
+    - DB_PASS=/run/secrets/db_pass
+    - DB_NAME=/run/secrets/db_name
+    - PORT=3000
+   secrets:
+     - db_user
+     - db_pass
+     - db_name
    volumes:
      - ./backend:/app
     # Pour éviter un bug avec bcrypt
@@ -28,6 +35,21 @@ services:
   database:
    image: mongo:5.0
    container_name: db_p6
+   environment:
+    - MONGO_INITDB_ROOT_USERNAME_FILE=/run/secrets/db_admin_user
+    - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/db_admin_pass
+    - MONGO_INITDB_USERNAME_FILE=/run/secrets/db_user
+    - MONGO_INITDB_PASSWORD_FILE=/run/secrets/db_pass
+    - MONGO_INITDB_DATABASE_FILE=/run/secrets/db_name 
+   volumes:
+     - db_data:/data/db
+     - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro 
+   secrets:
+     - db_admin_user
+     - db_admin_pass
+     - db_user
+     - db_pass
+     - db_name 
    restart: unless-stopped
    ports:
     - 27017:27017
@@ -37,3 +59,19 @@ services:
 networks:
   back-network:
   front-network:
+
+volumes:
+ db_data:
+
+secrets:
+ db_admin_user:
+  file: ./secrets/db_admin_user
+ db_admin_pass:
+  file: ./secrets/db_admin_pass
+ db_pass:
+  file: ./secrets/db_pass
+ db_user:
+  file: ./secrets/db_user
+ db_name:
+  file: ./secrets/db_name
+  

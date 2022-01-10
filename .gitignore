@@ -1,5 +1,7 @@
-**/node_modules
-**/.env
-**/package*.js
-**/__tests__
-**/images
+node_modules
+.env
+__tests__/
+images/
+secrets
+*.zip
+mongo-init.js

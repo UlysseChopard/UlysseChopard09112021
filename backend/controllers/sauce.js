@@ -1,15 +1,18 @@
 const fs = require("fs");
 const Sauce = require("../models/sauce");
 
+const deleteImage = (filename) => {
+  console.log("deleteImage", filename);
+  fs.unlink(`/app/images/${filename}`, (err) => {
+    if (err) throw err;
+  });
+};
+
 exports.create = (req, res, next) => {
   const sauceObj = JSON.parse(req.body.sauce);
   delete sauceObj._id;
   const sauce = new Sauce({
     ...sauceObj,
-    // likes: 0,
-    // dislikes: 0,
-    // usersLiked: [],
-    // usersDisliked: [],
     imageUrl: `${req.protocol}://${req.get("host")}/images/${
       req.file.filename
     }`,
@@ -20,7 +23,7 @@ exports.create = (req, res, next) => {
     .then(() =>
       res.status(201).json({ message: `Sauce ${sauce.name} enregistrée` })
     )
-    .catch((error) => res.status(400).json({ error: error}));
+    .catch((error) => res.status(400).json({ error: error }));
 };
 
 exports.get = (req, res, next) => {
@@ -37,7 +40,7 @@ exports.get = (req, res, next) => {
 exports.getAll = (req, res, next) => {
   Sauce.find()
     .exec()
-    .then((sauces) => res.status(200).json(sauces))
+    .then((sauces) => (sauces ? res.status(200).json(sauces) : res.status(200)))
     .catch((e) => res.status(400).json({ error: e }));
 };
 
@@ -51,46 +54,25 @@ exports.modify = (req, res, next) => {
       }
     : { ...req.body };
 
-  console.log("modified:", modifiedSauce);
-
-  const deletePreviousImage = (sauce) => {
-    const filename = sauce.imageUrl.split("/images/")[1];
-    console.log("sauce", sauce);
-    console.log("filename", filename);
-    fs.unlink(`/app/images/${filename}`, (err) => {
-      if (err) throw err;
-    });
-  };
-
-  Sauce.findByIdAndUpdate(
-    req.params.id,
-    { ...modifiedSauce, _id: req.params.id },
-    (err, sauce) => {
-      if (err) return res.status(400).json({ error: err });
-      if (req.file) deletePreviousImage(sauce);
-      res.status(200).json({ message: `Sauce ${sauce.name} modifiée` });
+  Sauce.findByIdAndUpdate(req.params.id, { ...modifiedSauce }, (err, sauce) => {
+    if (req.file) {
+      const prevImage = sauce.imageUrl.split("/images/")[1];
+      deleteImage(prevImage);
     }
-  );
+    if (err) return res.status(400).json({ error: err });
+    res.status(200).json({ message: `Sauce ${sauce.name} modifiée` });
+  });
 };
 
 exports.del = (req, res, next) => {
-  Sauce.findById(req.params.id)
+  Sauce.findByIdAndDelete(req.params.id)
     .exec()
-    .then((sauce) => {
-      const filename = sauce.imageUrl.split("/images/")[1];
-      fs.unlink(`images/${filename}`, () => {
-        const deleteQuery = Sauce.findByIdAndDelete(req.params.id);
-        deleteQuery
-          .exec()
-          .then((deletedSauce) =>
-            res
-              .status(200)
-              .json({ message: `Sauce ${deletedSauce.name} supprimée` })
-          )
-          .catch((e) => res.status(400).json({ error: e }));
-      });
+    .then((deletedSauce) => {
+      const filename = deletedSauce.imageUrl.split("/images/")[1];
+      deleteImage(filename);
+      res.status(200).json({ message: `Sauce ${deletedSauce.name} supprimée` });
     })
-    .catch((e) => res.status(500).json({ error: e }));
+    .catch((e) => res.status(400).json({ error: e }));
 };
 
 exports.recordLikes = (req, res, next) => {
