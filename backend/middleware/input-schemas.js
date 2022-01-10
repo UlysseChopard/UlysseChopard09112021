@@ -2,7 +2,7 @@ const Joi = require("joi");
 
 const schemas = {
   userPOST: Joi.object().keys({
-    email: Joi.string().required(),
+    email: Joi.string().email().required(),
     password: Joi.string().min(3).required(),
   }),
   saucePOST: Joi.object().keys({

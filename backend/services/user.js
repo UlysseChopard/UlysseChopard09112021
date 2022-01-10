@@ -11,7 +11,7 @@ const generateUserToken = (
   salt = "RANDOM_TOKEN_SECRET",
   expiration = "24h"
 ) => {
-  return jwt.sign({ userId }, salt || "RANDOM_TOKEN_SECRET", {
+  return jwt.sign({ userId }, salt, {
     expiresIn: expiration,
   });
 };

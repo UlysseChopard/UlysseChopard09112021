@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const auth = require("../middleware/auth");
+const { auth, isOwner } = require("../middleware/auth");
 const multer = require("../middleware/multer-config");
 const validateInput = require("../middleware/input-validation");
 const { saucePOST } = require("../middleware/input-schemas");
@@ -21,10 +21,11 @@ router.post(
 router.put(
   "/:id",
   validateInput(saucePOST, "body.sauce"),
+  isOwner,
   multer,
   sauceCtrl.modify
 );
-router.delete("/:id", sauceCtrl.del);
+router.delete("/:id", isOwner, sauceCtrl.del);
 router.post("/:id/like", sauceCtrl.recordLikes);
 
 module.exports = router;
