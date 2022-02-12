@@ -6,7 +6,7 @@ Création du backend en suivant des spécifications concernant l'API
 
 L'application est conteneurisée et peut être lancée par un simple `docker compose up`.
 
-Au prélable, choisir des valeurs pour les mots de passe, nom d'utilisateur et nom de la base de données et les placer dans un dossier `secrets` à la racine de l'application.
+Au prélable, choisir des valeurs pour les mots de passe, nom d'utilisateur et nom de la base de données et les placer chacune dans le fichier corespondant (voir tableau) dans un dossier `secrets` à la racine de l'application.
 
 Nom du fichier | Rôle
 :-------------:|:----:
